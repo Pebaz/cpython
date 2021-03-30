@@ -148,52 +148,60 @@ _Py_HashPointer(const void *p)
     return x;
 }
 
+
+#define XXH_STATIC_LINKING_ONLY   /* access advanced declarations */
+#define XXH_IMPLEMENTATION   /* access definitions */
+#include "xxhash.h"
+
 Py_hash_t
 _Py_HashBytes(const void *src, Py_ssize_t len)
 {
-    Py_hash_t x;
-    /*
-      We make the hash of the empty string be 0, rather than using
-      (prefix ^ suffix), since this slightly obfuscates the hash secret
-    */
-    if (len == 0) {
-        return 0;
-    }
+//     Py_hash_t x;
+//     /*
+//       We make the hash of the empty string be 0, rather than using
+//       (prefix ^ suffix), since this slightly obfuscates the hash secret
+//     */
+//     if (len == 0) {
+//         return 0;
+//     }
 
-#ifdef Py_HASH_STATS
-    hashstats[(len <= Py_HASH_STATS_MAX) ? len : 0]++;
-#endif
+// #ifdef Py_HASH_STATS
+//     hashstats[(len <= Py_HASH_STATS_MAX) ? len : 0]++;
+// #endif
 
-#if Py_HASH_CUTOFF > 0
-    if (len < Py_HASH_CUTOFF) {
-        /* Optimize hashing of very small strings with inline DJBX33A. */
-        Py_uhash_t hash;
-        const unsigned char *p = src;
-        hash = 5381; /* DJBX33A starts with 5381 */
+// #if Py_HASH_CUTOFF > 0
+//     if (len < Py_HASH_CUTOFF) {
+//         /* Optimize hashing of very small strings with inline DJBX33A. */
+//         Py_uhash_t hash;
+//         const unsigned char *p = src;
+//         hash = 5381; /* DJBX33A starts with 5381 */
 
-        switch(len) {
-            /* ((hash << 5) + hash) + *p == hash * 33 + *p */
-            case 7: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
-            case 6: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
-            case 5: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
-            case 4: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
-            case 3: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
-            case 2: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
-            case 1: hash = ((hash << 5) + hash) + *p++; break;
-            default:
-                Py_UNREACHABLE();
-        }
-        hash ^= len;
-        hash ^= (Py_uhash_t) _Py_HashSecret.djbx33a.suffix;
-        x = (Py_hash_t)hash;
-    }
-    else
-#endif /* Py_HASH_CUTOFF */
-        x = PyHash_Func.hash(src, len);
+//         switch(len) {
+//             /* ((hash << 5) + hash) + *p == hash * 33 + *p */
+//             case 7: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
+//             case 6: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
+//             case 5: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
+//             case 4: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
+//             case 3: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
+//             case 2: hash = ((hash << 5) + hash) + *p++; /* fallthrough */
+//             case 1: hash = ((hash << 5) + hash) + *p++; break;
+//             default:
+//                 Py_UNREACHABLE();
+//         }
+//         hash ^= len;
+//         hash ^= (Py_uhash_t) _Py_HashSecret.djbx33a.suffix;
+//         x = (Py_hash_t)hash;
+//     }
+//     else
+// #endif /* Py_HASH_CUTOFF */
+//         x = PyHash_Func.hash(src, len);
 
-    if (x == -1)
-        return -2;
-    return x;
+//     if (x == -1)
+//         return -2;
+//     return x;
+
+    XXH64_hash_t hash = XXH64(src, len, 0);
+    return hash;
 }
 
 void
